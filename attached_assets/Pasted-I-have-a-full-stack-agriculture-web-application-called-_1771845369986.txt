@@ -1,0 +1,76 @@
+I have a full-stack agriculture web application called Agri-Insight-Hub.
+
+Current Stack:
+	•	Frontend: React + TypeScript + Vite
+	•	Backend: Node.js + Express
+	•	ML Scripts: Python (Scikit-learn)
+	•	Database: PostgreSQL
+
+Currently, disease detection in server/ml/detect_disease.py uses a mock implementation with random.choice(). I want to replace it with a real image-based plant disease detection model using a proper deep learning algorithm.
+
+Task:
+
+Implement real disease prediction using a Convolutional Neural Network (CNN).
+
+Requirements:
+	1.	Use TensorFlow/Keras in Python.
+	2.	Use a pre-trained MobileNetV2 model (transfer learning).
+	3.	Fine-tune the last layers for plant disease classification.
+	4.	Accept uploaded leaf image from backend.
+	5.	Preprocess image:
+	•	Resize to 224x224
+	•	Normalize pixel values
+	•	Convert to numpy array
+	6.	Return prediction as JSON response.
+	7.	Model should classify:
+	•	Healthy
+	•	Leaf Blight
+	•	Rust
+	•	Powdery Mildew
+	•	Leaf Spot
+
+Implementation Details:
+	•	Create new file: server/ml/disease_model.py
+	•	Load model once (avoid loading per request).
+	•	Use softmax activation in final layer.
+	•	Save trained model as disease_model.h5
+	•	Backend should call Python script and return prediction.
+
+Additional:
+	•	Add proper error handling.
+	•	Add confidence score in output.
+	•	Ensure response format:
+
+{
+“disease”: “Rust”,
+“confidence”: 0.92
+}
+	•	Update Express route to handle image upload using multer.
+
+Important:
+
+Do NOT break existing crop and fertilizer ML modules.
+Keep architecture consistent.
+
+⸻
+
+🧠 Why This Prompt Works
+
+It clearly specifies:
+	•	Algorithm (CNN)
+	•	Framework (TensorFlow)
+	•	Architecture (MobileNetV2 transfer learning)
+	•	Image preprocessing steps
+	•	File structure
+	•	JSON format
+	•	Backend integration
+
+Replit AI works best with structured prompts like this.
+
+⸻
+
+🎓 If Examiner Asks Which Algorithm You Used
+
+You can confidently say:
+
+We implemented a Convolutional Neural Network using MobileNetV2 with transfer learning for plant disease classification.

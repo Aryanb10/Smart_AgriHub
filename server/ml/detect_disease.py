@@ -1,32 +1,58 @@
 import sys
 import json
-import random
+import os
+import numpy as np
+from PIL import Image
 
-# For MVP, we will simulate detection.
-# In a real production app, we would load a TensorFlow/PyTorch model here.
-# loading = "tensorflow.keras.models.load_model('model.h5')"
+# Suppress tensorflow logging
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+import tensorflow as tf
+
+# Model and Classes configuration
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "disease_model.h5")
+CLASSES = ["Healthy", "Leaf Blight", "Rust", "Powdery Mildew", "Leaf Spot"]
+
+# Load model once
+_model = None
+
+def get_model():
+    global _model
+    if _model is None:
+        if not os.path.exists(MODEL_PATH):
+            raise FileNotFoundError(f"Model file not found at {MODEL_PATH}")
+        _model = tf.keras.models.load_model(MODEL_PATH)
+    return _model
+
+def preprocess_image(image_path):
+    img = Image.open(image_path).convert('RGB')
+    img = img.resize((224, 224))
+    img_array = np.array(img).astype('float32') / 255.0
+    img_array = np.expand_dims(img_array, axis=0)
+    return img_array
 
 def detect():
     try:
-        # We don't actually process the image in this mock script
-        # path = sys.argv[1] 
+        # Read input from stdin
+        input_data = json.load(sys.stdin)
+        image_path = input_data.get("imagePath")
         
-        diseases = [
-            "Healthy",
-            "Leaf Blight",
-            "Rust",
-            "Powdery Mildew",
-            "Leaf Spot"
-        ]
+        if not image_path or not os.path.exists(image_path):
+            print(json.dumps({"error": f"Image path invalid: {image_path}"}))
+            return
+
+        model = get_model()
+        processed_img = preprocess_image(image_path)
         
-        # Random simulation
-        detected = random.choice(diseases)
-        confidence = round(random.uniform(0.7, 0.99), 2)
+        predictions = model.predict(processed_img, verbose=0)
+        class_idx = np.argmax(predictions[0])
+        confidence = float(predictions[0][class_idx])
         
         print(json.dumps({
-            "disease": detected,
-            "confidence": confidence
+            "disease": CLASSES[class_idx],
+            "confidence": round(confidence, 2)
         }))
+        
     except Exception as e:
         print(json.dumps({"error": str(e)}))
 
