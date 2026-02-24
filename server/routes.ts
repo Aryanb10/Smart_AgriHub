@@ -182,5 +182,38 @@ export async function registerRoutes(
     res.json(history);
   });
 
+  // --- SMART IRRIGATION ---
+  app.post(api.irrigation.predict.path, async (req, res) => {
+    try {
+      const input = api.irrigation.predict.input.parse(req.body);
+      const userId = req.user?.claims?.sub;
+
+      const scriptPath = path.join(process.cwd(), "server/ml/predict_irrigation.py");
+      const mlResult = await runPythonScript(scriptPath, input);
+
+      if (mlResult.error) throw new Error(mlResult.error);
+
+      // Save to logs
+      await storage.createIrrigationLog({
+        ...input,
+        userId: userId || null,
+        recommendedLiters: mlResult.recommended_liters,
+        bestTime: mlResult.best_time,
+        waterSavings: mlResult.water_savings_percentage
+      });
+
+      res.json(mlResult);
+    } catch (error) {
+      console.error("Irrigation prediction error:", error);
+      res.status(500).json({ message: "Failed to predict irrigation" });
+    }
+  });
+
+  app.get(api.irrigation.history.path, async (req, res) => {
+    const userId = req.user?.claims?.sub;
+    const history = await storage.getIrrigationLogs(userId);
+    res.json(history);
+  });
+
   return httpServer;
 }

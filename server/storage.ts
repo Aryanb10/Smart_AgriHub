@@ -1,5 +1,5 @@
 import { 
-  users, cropPredictions, fertilizerRecommendations, diseaseDetections,
+  users, cropPredictions, fertilizerRecommendations, diseaseDetections, irrigationLogs,
   type User, type InsertUser,
   type CropPrediction, type InsertCropPrediction,
   type FertilizerRecommendation, type InsertFertilizerRecommendation,
@@ -25,6 +25,10 @@ export interface IStorage {
   // Disease
   createDiseaseDetection(data: InsertDiseaseDetection): Promise<DiseaseDetection>;
   getDiseaseDetections(userId?: string): Promise<DiseaseDetection[]>;
+
+  // Irrigation
+  createIrrigationLog(data: any): Promise<any>;
+  getIrrigationLogs(userId?: string): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -73,6 +77,19 @@ export class DatabaseStorage implements IStorage {
       .from(diseaseDetections)
       .where(eq(diseaseDetections.userId, userId))
       .orderBy(desc(diseaseDetections.createdAt));
+  }
+
+  // Irrigation
+  async createIrrigationLog(data: any): Promise<any> {
+    const [result] = await db.insert(irrigationLogs).values(data).returning();
+    return result;
+  }
+  async getIrrigationLogs(userId?: string): Promise<any[]> {
+    if (!userId) return [];
+    return db.select()
+      .from(irrigationLogs)
+      .where(eq(irrigationLogs.userId, userId))
+      .orderBy(desc(irrigationLogs.createdAt));
   }
 }
 

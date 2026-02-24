@@ -1,15 +1,16 @@
 import { useAgriAI } from "@/hooks/use-agri-ai";
-import { Sprout, TestTube, Bug, ArrowRight, Loader2 } from "lucide-react";
+import { Sprout, TestTube, Bug, ArrowRight, Loader2, Droplets } from "lucide-react";
 import { Link } from "wouter";
 import { StatCard } from "@/components/StatCard";
 import { motion } from "framer-motion";
 
 export default function Dashboard() {
-  const { cropHistory, fertilizerHistory, diseaseHistory } = useAgriAI();
+  const { cropHistory, fertilizerHistory, diseaseHistory, irrigationHistory } = useAgriAI();
 
   const cropCount = cropHistory.data?.length || 0;
   const fertilizerCount = fertilizerHistory.data?.length || 0;
   const diseaseCount = diseaseHistory.data?.length || 0;
+  const irrigationCount = irrigationHistory.data?.length || 0;
   
   const recentCrops = cropHistory.data?.slice(0, 3) || [];
 
@@ -26,11 +27,14 @@ export default function Dashboard() {
             Smart Agriculture Dashboard
           </h1>
           <p className="text-primary-foreground/90 text-lg mb-8">
-            Leverage AI to optimize your harvest. Get real-time predictions for crops, fertilizers, and disease detection.
+            Leverage AI to optimize your harvest. Get real-time predictions for crops, fertilizers, irrigation, and disease detection.
           </p>
           <div className="flex flex-wrap gap-4">
             <Link href="/crop-predict" className="bg-white text-primary px-6 py-3 rounded-xl font-semibold hover:bg-white/90 transition-colors inline-flex items-center shadow-lg">
               Analyze Soil <ArrowRight className="ml-2 w-4 h-4" />
+            </Link>
+            <Link href="/irrigation" className="bg-primary-foreground/20 backdrop-blur-md text-white border border-white/30 px-6 py-3 rounded-xl font-semibold hover:bg-white/10 transition-colors inline-flex items-center">
+              Water Advice <Droplets className="ml-2 w-4 h-4" />
             </Link>
           </div>
         </div>
@@ -44,7 +48,7 @@ export default function Dashboard() {
       </motion.div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <StatCard
             title="Total Crop Analyses"
@@ -66,6 +70,13 @@ export default function Dashboard() {
             title="Disease Scans"
             value={diseaseCount}
             icon={<Bug className="w-5 h-5" />}
+          />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+          <StatCard
+            title="Irrigation Checks"
+            value={irrigationCount}
+            icon={<Droplets className="w-5 h-5" />}
           />
         </motion.div>
       </div>

@@ -43,6 +43,20 @@ export const diseaseDetections = pgTable("disease_detections", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const irrigationLogs = pgTable("irrigation_logs", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id"),
+  soilMoisture: real("soil_moisture").notNull(),
+  growthStage: text("growth_stage").notNull(),
+  evapotranspiration: real("evapotranspiration").notNull(),
+  temperature: real("temperature").notNull(),
+  humidity: real("humidity").notNull(),
+  recommendedLiters: real("recommended_liters").notNull(),
+  bestTime: text("best_time").notNull(),
+  waterSavings: real("water_savings").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // === RELATIONS ===
 // (Optional: Add relations to users table if strictly enforced, 
 // but often loose coupling is fine for MVP analytics)
@@ -51,6 +65,7 @@ export const diseaseDetections = pgTable("disease_detections", {
 export const insertCropPredictionSchema = createInsertSchema(cropPredictions).omit({ id: true, createdAt: true });
 export const insertFertilizerRecommendationSchema = createInsertSchema(fertilizerRecommendations).omit({ id: true, createdAt: true });
 export const insertDiseaseDetectionSchema = createInsertSchema(diseaseDetections).omit({ id: true, createdAt: true });
+export const insertIrrigationLogSchema = createInsertSchema(irrigationLogs).omit({ id: true, createdAt: true });
 
 // === EXPLICIT API CONTRACT TYPES ===
 

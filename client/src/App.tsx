@@ -10,6 +10,7 @@ import Home from "@/pages/Home";
 import CropPredict from "@/pages/CropPredict";
 import Fertilizer from "@/pages/Fertilizer";
 import Disease from "@/pages/Disease";
+import Irrigation from "@/pages/Irrigation";
 import History from "@/pages/History";
 
 function Router() {
@@ -26,6 +27,7 @@ function Router() {
               <Route path="/crop-predict" component={CropPredict} />
               <Route path="/fertilizer" component={Fertilizer} />
               <Route path="/disease" component={Disease} />
+              <Route path="/irrigation" component={Irrigation} />
               <Route path="/history" component={History} />
             </>
           ) : (

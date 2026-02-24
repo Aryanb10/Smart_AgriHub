@@ -95,6 +95,36 @@ export function useAgriAI() {
     },
   });
 
+  // === IRRIGATION ADVISOR ===
+  const predictIrrigationMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await fetch(api.irrigation.predict.path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to predict irrigation");
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.irrigation.history.path] });
+      toast({ title: "Advice Ready", description: "Irrigation plan generated successfully." });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const irrigationHistory = useQuery({
+    queryKey: [api.irrigation.history.path],
+    queryFn: async () => {
+      const res = await fetch(api.irrigation.history.path, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch irrigation history");
+      return await res.json();
+    },
+  });
+
   return {
     predictCrop: predictCropMutation,
     cropHistory,
@@ -102,5 +132,7 @@ export function useAgriAI() {
     fertilizerHistory,
     detectDisease: detectDiseaseMutation,
     diseaseHistory,
+    predictIrrigation: predictIrrigationMutation,
+    irrigationHistory,
   };
 }

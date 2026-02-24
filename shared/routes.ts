@@ -81,6 +81,34 @@ export const api = {
       },
     },
   },
+  irrigation: {
+    predict: {
+      method: 'POST' as const,
+      path: '/api/predict/irrigation' as const,
+      input: z.object({
+        soilMoisture: z.number(),
+        growthStage: z.string(),
+        evapotranspiration: z.number(),
+        temperature: z.number(),
+        humidity: z.number(),
+      }),
+      responses: {
+        200: z.object({
+          recommended_liters: z.number(),
+          best_time: z.string(),
+          water_savings_percentage: z.number(),
+        }),
+        400: errorSchemas.validation,
+      },
+    },
+    history: {
+      method: 'GET' as const,
+      path: '/api/history/irrigation' as const,
+      responses: {
+        200: z.array(z.any()),
+      },
+    },
+  },
 };
 
 // ============================================

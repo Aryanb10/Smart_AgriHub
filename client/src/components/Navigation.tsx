@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { Sprout, TestTube, Bug, History, LogOut, Menu, X, LayoutDashboard } from "lucide-react";
+import { Sprout, TestTube, Bug, History, LogOut, Menu, X, LayoutDashboard, Droplets } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +14,7 @@ export function Navigation() {
     { href: "/crop-predict", label: "Crop Advisor", icon: Sprout },
     { href: "/fertilizer", label: "Fertilizer", icon: TestTube },
     { href: "/disease", label: "Disease Detect", icon: Bug },
+    { href: "/irrigation", label: "Irrigation", icon: Droplets },
     { href: "/history", label: "History", icon: History },
   ];
 
