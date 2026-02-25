@@ -91,12 +91,21 @@ export const api = {
         evapotranspiration: z.number(),
         temperature: z.number(),
         humidity: z.number(),
+        location: z.string().optional(),
       }),
       responses: {
         200: z.object({
           recommended_liters: z.number(),
           best_time: z.string(),
           water_savings_percentage: z.number(),
+          live_weather: z.object({
+            temp: z.number(),
+            humidity: z.number(),
+            rain_forecast: z.number(),
+            location: z.string(),
+            description: z.string(),
+          }).optional(),
+          advice_note: z.string().optional(),
         }),
         400: errorSchemas.validation,
       },

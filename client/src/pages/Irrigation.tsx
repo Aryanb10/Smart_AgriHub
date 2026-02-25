@@ -13,6 +13,7 @@ const irrigationSchema = z.object({
   evapotranspiration: z.coerce.number().min(0).max(20),
   temperature: z.coerce.number().min(0).max(60),
   humidity: z.coerce.number().min(0).max(100),
+  location: z.string().min(1, "Location required"),
 });
 
 type IrrigationFormData = z.infer<typeof irrigationSchema>;
@@ -28,7 +29,8 @@ export default function IrrigationAdvisor() {
       growthStage: "Vegetative",
       evapotranspiration: 5.2,
       temperature: 28.5,
-      humidity: 65
+      humidity: 65,
+      location: "New York"
     }
   });
 
@@ -48,6 +50,7 @@ export default function IrrigationAdvisor() {
           <select
             {...form.register(name)}
             className="input-field pr-10 appearance-none bg-background"
+            data-testid={`select-${name}`}
           >
             {options.map((opt: string) => (
               <option key={opt} value={opt}>{opt}</option>
@@ -64,10 +67,13 @@ export default function IrrigationAdvisor() {
                 "input-field pr-12",
                 form.formState.errors[name] && "border-destructive focus-visible:ring-destructive"
               )}
+              data-testid={`input-${name}`}
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">
-              {unit}
-            </span>
+            {unit && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">
+                {unit}
+              </span>
+            )}
           </>
         )}
       </div>
@@ -89,7 +95,7 @@ export default function IrrigationAdvisor() {
           <div>
             <h1 className="text-3xl font-display font-bold text-foreground mb-2">Smart Irrigation Advisor</h1>
             <p className="text-muted-foreground">
-              Optimize your water usage with AI-driven irrigation timing and amount recommendations.
+              Optimize your water usage with AI-driven irrigation timing and amount recommendations, now with live weather tracking.
             </p>
           </div>
 
@@ -97,9 +103,9 @@ export default function IrrigationAdvisor() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold border-b border-border pb-2 mb-4">Soil & Crop State</h3>
+                <h3 className="text-lg font-semibold border-b border-border pb-2 mb-4">Location & Crop State</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <InputGroup name="soilMoisture" label="Soil Moisture" icon={Droplets} unit="%" />
+                  <InputGroup name="location" label="Location (City)" icon={Wind} type="text" />
                   <InputGroup 
                     name="growthStage" 
                     label="Growth Stage" 
@@ -107,12 +113,19 @@ export default function IrrigationAdvisor() {
                     options={["Initial", "Vegetative", "Flowering", "Maturity"]} 
                   />
                 </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <InputGroup name="soilMoisture" label="Soil Moisture" icon={Droplets} unit="%" />
+                  <InputGroup name="evapotranspiration" label="Evapotranspiration" icon={Wind} unit="mm/day" />
+                </div>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold border-b border-border pb-2 mb-4">Environmental Factors</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <InputGroup name="evapotranspiration" label="Evapotranspiration" icon={Wind} unit="mm/day" />
+                <div className="flex items-center justify-between border-b border-border pb-2 mb-4">
+                  <h3 className="text-lg font-semibold">Manual Overrides</h3>
+                  <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase font-bold tracking-wider">Live Weather Optional</span>
+                </div>
+                <p className="text-xs text-muted-foreground mb-2">If live weather fails, we'll use these manual values.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <InputGroup name="temperature" label="Temperature" icon={Thermometer} unit="°C" />
                   <InputGroup name="humidity" label="Humidity" icon={Droplets} unit="%" />
                 </div>
@@ -123,14 +136,15 @@ export default function IrrigationAdvisor() {
                   type="submit"
                   disabled={predictIrrigation.isPending}
                   className="w-full btn-primary text-lg h-14"
+                  data-testid="button-get-advice"
                 >
                   {predictIrrigation.isPending ? (
                     <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Calculating...
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Analyzing Weather...
                     </>
                   ) : (
                     <>
-                      <Zap className="mr-2 h-5 w-5" /> Get Irrigation Advice
+                      <Zap className="mr-2 h-5 w-5" /> Get AI Irrigation Advice
                     </>
                   )}
                 </button>
@@ -153,25 +167,48 @@ export default function IrrigationAdvisor() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="space-y-6"
               >
+                {result.live_weather && (
+                  <div className="bg-secondary/50 border border-border rounded-2xl p-4 flex items-center gap-4">
+                    <div className="bg-primary/10 p-3 rounded-xl">
+                      <Wind className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-foreground">Live Weather: {result.live_weather.location}</div>
+                      <div className="text-xs text-muted-foreground flex gap-3">
+                        <span>{result.live_weather.temp}°C</span>
+                        <span>{result.live_weather.humidity}% Humidity</span>
+                        <span className="text-primary font-medium">{result.live_weather.rain_forecast}mm Rain Forecasted</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {result.advice_note && (
+                  <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 p-4 rounded-2xl text-sm font-medium flex gap-2">
+                    <Zap className="w-4 h-4 shrink-0" />
+                    {result.advice_note}
+                  </div>
+                )}
+
                 <div className="bg-primary text-primary-foreground rounded-3xl p-8 shadow-2xl relative overflow-hidden">
                   <div className="absolute top-0 right-0 p-8 opacity-10">
                     <Droplets size={160} />
                   </div>
                   
                   <h3 className="text-xl font-medium mb-2 opacity-90 text-center">Recommended Irrigation</h3>
-                  <div className="text-5xl font-display font-bold mb-6 text-center tracking-tight">
+                  <div className="text-5xl font-display font-bold mb-6 text-center tracking-tight" data-testid="text-recommended-liters">
                     {result.recommended_liters} <span className="text-2xl opacity-80">Liters/Acre</span>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-white/20 backdrop-blur-md rounded-2xl p-4 text-center">
                       <Timer className="w-5 h-5 mx-auto mb-1 opacity-80" />
-                      <div className="text-xl font-bold">{result.best_time}</div>
+                      <div className="text-xl font-bold" data-testid="text-best-time">{result.best_time}</div>
                       <div className="text-xs opacity-70 uppercase tracking-wider">Best Time</div>
                     </div>
                     <div className="bg-white/20 backdrop-blur-md rounded-2xl p-4 text-center">
                       <Zap className="w-5 h-5 mx-auto mb-1 opacity-80" />
-                      <div className="text-xl font-bold">{result.water_savings_percentage}%</div>
+                      <div className="text-xl font-bold" data-testid="text-water-savings">{result.water_savings_percentage}%</div>
                       <div className="text-xs opacity-70 uppercase tracking-wider">Water Saved</div>
                     </div>
                   </div>
@@ -180,8 +217,7 @@ export default function IrrigationAdvisor() {
                 <div className="bg-card border border-border rounded-2xl p-6 text-center">
                   <h4 className="font-semibold mb-2">Sustainable Impact</h4>
                   <p className="text-sm text-muted-foreground">
-                    By following this AI-optimized schedule, you are contributing to SDG 6 (Clean Water and Sanitation) 
-                    and reducing overall operational costs.
+                    By accounting for live rainfall data, we've optimized your water usage to ensure maximum efficiency and crop health.
                   </p>
                 </div>
               </motion.div>
@@ -197,7 +233,7 @@ export default function IrrigationAdvisor() {
                 </div>
                 <h3 className="text-xl font-bold text-foreground mb-2">Awaiting Parameters</h3>
                 <p className="text-muted-foreground">
-                  Provide your soil and weather data to receive an optimized irrigation plan.
+                  Provide your location and soil data to receive a weather-optimized irrigation plan.
                 </p>
               </motion.div>
             )}
