@@ -169,7 +169,11 @@ export async function registerRoutes(
         confidence: mlResult.confidence
       });
 
-      res.json(saved);
+      res.json({
+        ...saved,
+        severity: mlResult.severity,
+        treatment: mlResult.treatment
+      });
     } catch (error) {
       console.error("Disease detection error:", error);
       res.status(500).json({ message: "Failed to detect disease" });

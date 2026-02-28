@@ -132,19 +132,56 @@ export default function Disease() {
                     : <AlertTriangle className="w-8 h-8 text-red-600" />
                   }
                 </div>
-                <h2 className="text-3xl font-display font-bold mb-2">{result.detectedDisease}</h2>
-                <div className="text-muted-foreground mb-6">
-                  Confidence Score: <span className="font-semibold text-foreground">{(result.confidence * 100).toFixed(1)}%</span>
-                </div>
+                <h2 className="text-4xl font-display font-bold mb-2 tracking-tight">{result.detectedDisease}</h2>
                 
-                {/* Placeholder for treatment - could come from backend in future */}
-                {!result.detectedDisease.toLowerCase().includes("healthy") && (
-                  <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/30 rounded-xl p-4 text-left max-w-2xl mx-auto">
-                    <h4 className="font-semibold text-orange-800 dark:text-orange-200 mb-2 flex items-center">
-                      <AlertTriangle className="w-4 h-4 mr-2" /> Recommended Action
+                <div className="flex flex-wrap items-center justify-center gap-6 my-8 py-6 border-y border-border/50">
+                  <div className="flex flex-col items-center">
+                    <div className="text-[10px] text-muted-foreground mb-1 uppercase tracking-widest font-bold">Confidence</div>
+                    <div className="text-3xl font-display font-bold text-primary">{(result.confidence * 100).toFixed(0)}%</div>
+                  </div>
+                  <div className="w-px h-10 bg-border hidden md:block"></div>
+                  <div className="flex flex-col items-center">
+                    <div className="text-[10px] text-muted-foreground mb-1 uppercase tracking-widest font-bold">Severity</div>
+                    <div className={cn(
+                      "text-xl font-bold px-4 py-1 rounded-full",
+                      result.severity === "Severe" ? "bg-destructive/10 text-destructive" :
+                      result.severity === "Moderate" ? "bg-amber-500/10 text-amber-600" :
+                      "bg-primary/10 text-primary"
+                    )}>
+                      {result.severity || "Healthy"}
+                    </div>
+                  </div>
+                </div>
+
+                {result.treatment && !result.detectedDisease.toLowerCase().includes("healthy") && (
+                  <div className="mt-8 space-y-6 text-left max-w-2xl mx-auto">
+                    <h4 className="font-bold text-xl flex items-center gap-2 text-foreground">
+                      <CheckCircle className="w-6 h-6 text-primary" /> Recommended Recovery Plan
                     </h4>
-                    <p className="text-sm text-orange-700 dark:text-orange-300">
-                      Please consult a local agricultural expert for specific treatment options for {result.detectedDisease}. Isolate the affected plant to prevent spread.
+                    
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="group bg-primary/[0.03] hover:bg-primary/[0.05] p-5 rounded-2xl border border-primary/10 transition-colors">
+                        <div className="text-[10px] font-bold text-primary uppercase mb-2 tracking-widest">Organic Approach</div>
+                        <p className="text-sm leading-relaxed text-foreground/90">{result.treatment.organic}</p>
+                      </div>
+                      
+                      <div className="group bg-secondary/30 hover:bg-secondary/50 p-5 rounded-2xl border border-border transition-colors">
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase mb-2 tracking-widest">Chemical Control</div>
+                        <p className="text-sm leading-relaxed text-foreground/90">{result.treatment.chemical}</p>
+                      </div>
+                      
+                      <div className="group bg-amber-500/[0.03] hover:bg-amber-500/[0.05] p-5 rounded-2xl border border-amber-500/10 transition-colors">
+                        <div className="text-[10px] font-bold text-amber-600 uppercase mb-2 tracking-widest">Prevention & Hygiene</div>
+                        <p className="text-sm leading-relaxed text-foreground/90">{result.treatment.prevention}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {result.detectedDisease.toLowerCase().includes("healthy") && (
+                  <div className="bg-green-500/5 border border-green-500/10 rounded-2xl p-6 text-left max-w-2xl mx-auto mt-8">
+                    <p className="text-green-700 dark:text-green-400 text-sm leading-relaxed">
+                      Your plant appears to be in great health! Continue maintaining regular watering schedules and ensure adequate sunlight to keep it thriving.
                     </p>
                   </div>
                 )}
