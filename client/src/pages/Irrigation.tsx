@@ -14,6 +14,7 @@ const irrigationSchema = z.object({
   temperature: z.coerce.number().min(0).max(60),
   humidity: z.coerce.number().min(0).max(100),
   location: z.string().min(1, "Location required"),
+  crop: z.string().min(1, "Crop required"),
 });
 
 type IrrigationFormData = z.infer<typeof irrigationSchema>;
@@ -30,7 +31,8 @@ export default function IrrigationAdvisor() {
       evapotranspiration: 5.2,
       temperature: 28.5,
       humidity: 65,
-      location: "New York"
+      location: "New York",
+      crop: "Tomato"
     }
   });
 
@@ -107,14 +109,22 @@ export default function IrrigationAdvisor() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <InputGroup name="location" label="Location (City)" icon={Wind} type="text" />
                   <InputGroup 
+                    name="crop" 
+                    label="Crop Type" 
+                    icon={Droplets} 
+                    options={["Rice", "Wheat", "Maize", "Cotton", "Sugarcane", "Tomato", "Potato", "Groundnut", "Apple", "Grapes", "Orange"]} 
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <InputGroup 
                     name="growthStage" 
                     label="Growth Stage" 
                     icon={Gauge} 
                     options={["Initial", "Vegetative", "Flowering", "Maturity"]} 
                   />
+                  <InputGroup name="soilMoisture" label="Soil Moisture" icon={Droplets} unit="%" />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <InputGroup name="soilMoisture" label="Soil Moisture" icon={Droplets} unit="%" />
                   <InputGroup name="evapotranspiration" label="Evapotranspiration" icon={Wind} unit="mm/day" />
                 </div>
               </div>
@@ -193,6 +203,10 @@ export default function IrrigationAdvisor() {
                 <div className="bg-primary text-primary-foreground rounded-3xl p-8 shadow-2xl relative overflow-hidden">
                   <div className="absolute top-0 right-0 p-8 opacity-10">
                     <Droplets size={160} />
+                  </div>
+                  
+                  <div className="text-center mb-4">
+                    <span className="bg-white/20 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">{result.crop} Optimization</span>
                   </div>
                   
                   <h3 className="text-xl font-medium mb-2 opacity-90 text-center">Recommended Irrigation</h3>

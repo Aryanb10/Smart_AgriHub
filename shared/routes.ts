@@ -92,6 +92,7 @@ export const api = {
         temperature: z.number(),
         humidity: z.number(),
         location: z.string().optional(),
+        crop: z.string().optional(),
       }),
       responses: {
         200: z.object({
