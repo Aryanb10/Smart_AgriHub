@@ -1,0 +1,10 @@
+Add live weather tracking to irrigation recommendations
+
+Integrates OpenWeatherMap API to factor in real-time temperature, humidity, and rainfall forecasts into irrigation planning, and updates the UI to display this information and provide location-specific advice.
+
+Replit-Commit-Author: Agent
+Replit-Commit-Session-Id: e2ea3333-ddf7-4805-b45a-2835c162c2c0
+Replit-Commit-Checkpoint-Type: full_checkpoint
+Replit-Commit-Event-Id: c07617af-c834-4218-b245-8868ff892137
+Replit-Commit-Screenshot-Url: https://storage.googleapis.com/screenshot-production-us-central1/08c1a962-b7d1-4083-82b3-508c4e11fec7/e2ea3333-ddf7-4805-b45a-2835c162c2c0/KL767xe
+Replit-Helium-Checkpoint-Created: true
