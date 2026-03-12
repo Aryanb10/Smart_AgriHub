@@ -88,11 +88,10 @@ export const api = {
       input: z.object({
         soilMoisture: z.number(),
         growthStage: z.string(),
-        evapotranspiration: z.number(),
-        temperature: z.number(),
-        humidity: z.number(),
         location: z.string().optional(),
         crop: z.string().optional(),
+        temperature: z.number().optional(),
+        humidity: z.number().optional(),
       }),
       responses: {
         200: z.object({
