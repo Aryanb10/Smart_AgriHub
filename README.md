@@ -1,4 +1,4 @@
-# @replit/vite-plugin-dev-banner
+# Smart Agriculture System
 
 A Vite plugin that injects a development preview banner on `*.replit.dev` domains during development. The banner warns users that they're viewing a temporary development preview.
 
