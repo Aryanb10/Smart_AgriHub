@@ -197,10 +197,14 @@ export async function registerRoutes(
 
       if (mlResult.error) throw new Error(mlResult.error);
 
-      // Save to logs
+      // Save to logs — use actual values from weather API result, not form input
       await storage.createIrrigationLog({
-        ...input,
+        soilMoisture: input.soilMoisture,
+        growthStage: input.growthStage,
         userId: userId || null,
+        evapotranspiration: mlResult.live_weather?.evapotranspiration ?? 0,
+        temperature: mlResult.live_weather?.temp ?? input.temperature ?? 0,
+        humidity: mlResult.live_weather?.humidity ?? input.humidity ?? 0,
         recommendedLiters: mlResult.recommended_liters,
         bestTime: mlResult.best_time,
         waterSavings: mlResult.water_savings_percentage
