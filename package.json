@@ -4,9 +4,9 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "dev": "NODE_ENV=development tsx server/index.ts",
-    "build": "tsx script/build.ts",
-    "start": "NODE_ENV=production node dist/index.cjs",
+    "dev": "node script/run-with-env.cjs NODE_ENV development tsx server/index.ts",
+    "build": "node script/run-with-env.cjs NODE_ENV production tsx script/build.ts",
+    "start": "node script/run-with-env.cjs NODE_ENV production node dist/index.cjs",
     "check": "tsc",
     "db:push": "drizzle-kit push"
   },

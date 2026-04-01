@@ -1,0 +1,7 @@
+
+> rest-express@1.0.0 dev
+> node script/run-with-env.cjs NODE_ENV development tsx server/index.ts
+
+10:53:07 AM [express] serving on port 5000
+10:53:13 AM [express] POST /api/predict/irrigation 200 in 2803ms :: {"recommended_liters":349.2,"best_time":"6:00 AM","water_savings_percentage":20,"live_weather":{"temp":27.8,"humidity":81,"rain_forecast":0,"evapotranspiration":0.98,"location":"Mumbai, India","description":"clear sky","source":"live"},"advice_note":"Tailored for Tomato at Vegetative stage. Live weather used for Mumbai, India.","crop":"Tomato"}
+10:53:14 AM [express] POST /api/detect/disease 200 in 433ms :: {"id":1,"userId":"local-dev-user","imageUrl":"/uploads/1774675393720-943092622.png","detectedDisease":"Yellowing Stress Pattern","confidence":0.74,"createdAt":"2026-03-28T05:23:14.148Z","severity":"Mild","treatment":{"organic":"Check watering consistency and add compost or balanced organic feed.","chemical":"Use a balanced foliar nutrient spray only if deficiency is confirmed.","prevention":"Maintain even irrigation and monitor nutrient balance."}}

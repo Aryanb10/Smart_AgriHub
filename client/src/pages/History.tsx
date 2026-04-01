@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 export default function History() {
   const { cropHistory, fertilizerHistory, diseaseHistory } = useAgriAI();
 
-  const HistoryTable = ({ data, type }: { data: any[], type: 'crop' | 'fertilizer' | 'disease' }) => {
+  const HistoryTable = ({ data, type }: { data: any[]; type: "crop" | "fertilizer" | "disease" }) => {
     if (!data || data.length === 0) {
       return (
         <div className="text-center py-20 bg-muted/30 rounded-2xl border border-dashed border-border">
@@ -22,9 +22,9 @@ export default function History() {
             <tr>
               <th className="px-6 py-4">Date</th>
               <th className="px-6 py-4">
-                {type === 'crop' && "Predicted Crop"}
-                {type === 'fertilizer' && "Recommended Fertilizer"}
-                {type === 'disease' && "Detected Disease"}
+                {type === "crop" && "Predicted Crop"}
+                {type === "fertilizer" && "Recommended Fertilizer"}
+                {type === "disease" && "Detected Disease"}
               </th>
               <th className="px-6 py-4">Details</th>
             </tr>
@@ -32,29 +32,27 @@ export default function History() {
           <tbody className="divide-y divide-border bg-card">
             {data.map((item) => (
               <tr key={item.id} className="hover:bg-muted/30 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {new Date(item.createdAt).toLocaleDateString()}
-                </td>
+                <td className="px-6 py-4 whitespace-nowrap">{new Date(item.createdAt).toLocaleDateString()}</td>
                 <td className="px-6 py-4 font-medium text-foreground">
-                  {type === 'crop' && item.predictedCrop}
-                  {type === 'fertilizer' && item.recommendedFertilizer}
-                  {type === 'disease' && item.detectedDisease}
+                  {type === "crop" && item.predictedCrop}
+                  {type === "fertilizer" && item.recommendedFertilizer}
+                  {type === "disease" && item.detectedDisease}
                 </td>
                 <td className="px-6 py-4 text-muted-foreground">
-                  {type === 'crop' && (
+                  {type === "crop" && (
                     <span className="inline-flex gap-2">
                       <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">pH: {item.ph}</span>
                       <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded">Temp: {item.temperature}°C</span>
                     </span>
                   )}
-                  {type === 'fertilizer' && (
-                    <span>For {item.cropType} in {item.soilType} soil</span>
-                  )}
-                  {type === 'disease' && (
-                    <span className={cn(
-                      "text-xs px-2 py-1 rounded",
-                      item.confidence > 0.8 ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
-                    )}>
+                  {type === "fertilizer" && <span>For {item.cropType} in {item.soilType} soil</span>}
+                  {type === "disease" && (
+                    <span
+                      className={cn(
+                        "text-xs px-2 py-1 rounded",
+                        item.confidence > 0.8 ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800",
+                      )}
+                    >
                       Confidence: {(item.confidence * 100).toFixed(1)}%
                     </span>
                   )}

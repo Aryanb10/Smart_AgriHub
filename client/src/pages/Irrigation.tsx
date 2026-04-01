@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type FieldErrors, type FieldPath } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAgriAI } from "@/hooks/use-agri-ai";
@@ -14,19 +14,45 @@ const irrigationSchema = z.object({
   crop: z.string().min(1, "Crop required"),
   temperature: z.preprocess(
     (v) => (v === "" || v === null || v === undefined ? undefined : Number(v)),
-    z.number().min(0).max(60).optional()
+    z.number().min(0).max(60).optional(),
   ),
   humidity: z.preprocess(
     (v) => (v === "" || v === null || v === undefined ? undefined : Number(v)),
-    z.number().min(0).max(100).optional()
+    z.number().min(0).max(100).optional(),
   ),
 });
 
 type IrrigationFormData = z.infer<typeof irrigationSchema>;
+type IrrigationResult = {
+  recommended_liters: number;
+  best_time: string;
+  water_savings_percentage: number;
+  crop: string;
+  advice_note?: string;
+  live_weather?: {
+    temp: number;
+    humidity: number;
+    rain_forecast: number;
+    evapotranspiration: number;
+    location: string;
+    description: string;
+    source: "live" | "manual";
+  };
+};
+
+type InputGroupProps = {
+  label: string;
+  name: FieldPath<IrrigationFormData>;
+  icon: typeof Droplets;
+  unit?: string;
+  type?: React.HTMLInputTypeAttribute;
+  options?: string[] | null;
+  placeholder?: string;
+} & React.InputHTMLAttributes<HTMLInputElement>;
 
 export default function IrrigationAdvisor() {
   const { predictIrrigation } = useAgriAI();
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<IrrigationResult | null>(null);
 
   const form = useForm<IrrigationFormData>({
     resolver: zodResolver(irrigationSchema),
@@ -37,16 +63,27 @@ export default function IrrigationAdvisor() {
       crop: "Tomato",
       temperature: undefined,
       humidity: undefined,
-    }
+    },
   });
+
+  const fieldErrors = form.formState.errors as FieldErrors<IrrigationFormData>;
 
   const onSubmit = (data: IrrigationFormData) => {
     predictIrrigation.mutate(data, {
-      onSuccess: (res) => setResult(res)
+      onSuccess: (res) => setResult(res),
     });
   };
 
-  const InputGroup = ({ label, name, icon: Icon, unit, type = "number", options = null, placeholder = "", ...props }: any) => (
+  const InputGroup = ({
+    label,
+    name,
+    icon: Icon,
+    unit,
+    type = "number",
+    options = null,
+    placeholder = "",
+    ...props
+  }: InputGroupProps) => (
     <div className="space-y-2">
       <label className="text-sm font-medium text-foreground flex items-center gap-2">
         <Icon className="w-4 h-4 text-primary" /> {label}
@@ -58,8 +95,10 @@ export default function IrrigationAdvisor() {
             className="input-field pr-10 appearance-none bg-background"
             data-testid={`select-${name}`}
           >
-            {options.map((opt: string) => (
-              <option key={opt} value={opt}>{opt}</option>
+            {options.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
             ))}
           </select>
         ) : (
@@ -73,7 +112,7 @@ export default function IrrigationAdvisor() {
               className={cn(
                 "input-field",
                 unit && "pr-12",
-                form.formState.errors[name] && "border-destructive focus-visible:ring-destructive"
+                fieldErrors[name] && "border-destructive focus-visible:ring-destructive",
               )}
               data-testid={`input-${name}`}
             />
@@ -85,8 +124,8 @@ export default function IrrigationAdvisor() {
           </>
         )}
       </div>
-      {form.formState.errors[name] && (
-        <p className="text-xs text-destructive">{form.formState.errors[name]?.message as string}</p>
+      {fieldErrors[name] && (
+        <p className="text-xs text-destructive">{fieldErrors[name]?.message as string}</p>
       )}
     </div>
   );
@@ -94,7 +133,6 @@ export default function IrrigationAdvisor() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -103,13 +141,12 @@ export default function IrrigationAdvisor() {
           <div>
             <h1 className="text-3xl font-display font-bold text-foreground mb-2">Smart Irrigation Advisor</h1>
             <p className="text-muted-foreground">
-              Enter your location and crop. Live weather data — including temperature, humidity, and evapotranspiration — is fetched automatically.
+              Enter your location and crop. Live weather data, including temperature, humidity, and evapotranspiration, is fetched automatically.
             </p>
           </div>
 
           <div className="bg-card border border-border rounded-2xl p-6 md:p-8 shadow-sm">
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold border-b border-border pb-2 mb-4">Location & Crop</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -140,7 +177,7 @@ export default function IrrigationAdvisor() {
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Leave these empty — temperature, humidity, and evapotranspiration are fetched live from the weather API. Only fill these in if you have no internet or want to override.
+                  Leave these empty. Temperature, humidity, and evapotranspiration are fetched live from the weather API. Only fill these in if you want to override.
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <InputGroup name="temperature" label="Temperature (fallback)" icon={Thermometer} unit="°C" placeholder="Auto from API" />
@@ -188,15 +225,18 @@ export default function IrrigationAdvisor() {
                   <div className="bg-secondary/50 border border-border rounded-2xl p-4 space-y-3">
                     <div className="flex items-center gap-3">
                       <div className="bg-primary/10 p-2.5 rounded-xl">
-                        {result.live_weather.source === "live"
-                          ? <Wifi className="w-5 h-5 text-primary" />
-                          : <WifiOff className="w-5 h-5 text-amber-500" />
-                        }
+                        {result.live_weather.source === "live" ? (
+                          <Wifi className="w-5 h-5 text-primary" />
+                        ) : (
+                          <WifiOff className="w-5 h-5 text-amber-500" />
+                        )}
                       </div>
                       <div>
                         <div className="text-sm font-semibold text-foreground flex items-center gap-2">
                           {result.live_weather.source === "live" ? "Live Weather" : "Manual Fallback"}: {result.live_weather.location}
-                          <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-full text-muted-foreground capitalize">{result.live_weather.description}</span>
+                          <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-full text-muted-foreground capitalize">
+                            {result.live_weather.description}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -214,7 +254,7 @@ export default function IrrigationAdvisor() {
                         <div className="text-sm font-bold text-primary">{result.live_weather.rain_forecast}mm</div>
                       </div>
                       <div className="bg-background rounded-xl p-2 border border-border">
-                        <div className="text-xs text-muted-foreground mb-0.5">ET₀</div>
+                        <div className="text-xs text-muted-foreground mb-0.5">ET0</div>
                         <div className="text-sm font-bold">{result.live_weather.evapotranspiration}mm</div>
                       </div>
                     </div>
@@ -259,7 +299,7 @@ export default function IrrigationAdvisor() {
                 <div className="bg-card border border-border rounded-2xl p-6 text-center">
                   <h4 className="font-semibold mb-2">Sustainable Impact</h4>
                   <p className="text-sm text-muted-foreground">
-                    By using live weather data and crop-specific factors, your irrigation is precisely optimized — saving water and improving yield.
+                    By using live weather data and crop-specific factors, your irrigation is precisely optimized, saving water and improving yield.
                   </p>
                 </div>
               </motion.div>

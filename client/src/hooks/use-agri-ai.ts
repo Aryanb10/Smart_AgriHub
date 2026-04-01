@@ -2,6 +2,36 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, type PredictCropRequest, type PredictFertilizerRequest } from "@shared/routes";
 import { useToast } from "@/hooks/use-toast";
 
+async function apiFetch(input: RequestInfo | URL, init?: RequestInit) {
+  try {
+    const res = await fetch(input, init);
+
+    if (!res.ok) {
+      let message = "Request failed";
+
+      try {
+        const body = await res.json();
+        message = body?.message || message;
+      } catch {
+        const text = await res.text();
+        if (text) {
+          message = text;
+        }
+      }
+
+      throw new Error(message);
+    }
+
+    return res;
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error("Backend server is not reachable. Start the app with npm.cmd run dev and keep it running.");
+    }
+
+    throw error;
+  }
+}
+
 export function useAgriAI() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -9,13 +39,12 @@ export function useAgriAI() {
   // === CROP PREDICTION ===
   const predictCropMutation = useMutation({
     mutationFn: async (data: Omit<PredictCropRequest, "id" | "createdAt" | "predictedCrop" | "userId">) => {
-      const res = await fetch(api.crop.predict.path, {
+      const res = await apiFetch(api.crop.predict.path, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
         credentials: "include",
       });
-      if (!res.ok) throw new Error("Failed to predict crop");
       return await res.json();
     },
     onSuccess: () => {
@@ -30,8 +59,7 @@ export function useAgriAI() {
   const cropHistory = useQuery({
     queryKey: [api.crop.history.path],
     queryFn: async () => {
-      const res = await fetch(api.crop.history.path, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch crop history");
+      const res = await apiFetch(api.crop.history.path, { credentials: "include" });
       return await res.json();
     },
   });
@@ -39,13 +67,12 @@ export function useAgriAI() {
   // === FERTILIZER RECOMMENDATION ===
   const predictFertilizerMutation = useMutation({
     mutationFn: async (data: Omit<PredictFertilizerRequest, "id" | "createdAt" | "recommendedFertilizer" | "userId">) => {
-      const res = await fetch(api.fertilizer.predict.path, {
+      const res = await apiFetch(api.fertilizer.predict.path, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
         credentials: "include",
       });
-      if (!res.ok) throw new Error("Failed to recommend fertilizer");
       return await res.json();
     },
     onSuccess: () => {
@@ -60,8 +87,7 @@ export function useAgriAI() {
   const fertilizerHistory = useQuery({
     queryKey: [api.fertilizer.history.path],
     queryFn: async () => {
-      const res = await fetch(api.fertilizer.history.path, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch fertilizer history");
+      const res = await apiFetch(api.fertilizer.history.path, { credentials: "include" });
       return await res.json();
     },
   });
@@ -69,12 +95,11 @@ export function useAgriAI() {
   // === DISEASE DETECTION ===
   const detectDiseaseMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const res = await fetch(api.disease.detect.path, {
+      const res = await apiFetch(api.disease.detect.path, {
         method: "POST",
         body: formData,
         credentials: "include",
       });
-      if (!res.ok) throw new Error("Failed to detect disease");
       return await res.json();
     },
     onSuccess: () => {
@@ -89,8 +114,7 @@ export function useAgriAI() {
   const diseaseHistory = useQuery({
     queryKey: [api.disease.history.path],
     queryFn: async () => {
-      const res = await fetch(api.disease.history.path, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch disease history");
+      const res = await apiFetch(api.disease.history.path, { credentials: "include" });
       return await res.json();
     },
   });
@@ -98,13 +122,12 @@ export function useAgriAI() {
   // === IRRIGATION ADVISOR ===
   const predictIrrigationMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await fetch(api.irrigation.predict.path, {
+      const res = await apiFetch(api.irrigation.predict.path, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
         credentials: "include",
       });
-      if (!res.ok) throw new Error("Failed to predict irrigation");
       return await res.json();
     },
     onSuccess: () => {
@@ -119,8 +142,7 @@ export function useAgriAI() {
   const irrigationHistory = useQuery({
     queryKey: [api.irrigation.history.path],
     queryFn: async () => {
-      const res = await fetch(api.irrigation.history.path, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch irrigation history");
+      const res = await apiFetch(api.irrigation.history.path, { credentials: "include" });
       return await res.json();
     },
   });

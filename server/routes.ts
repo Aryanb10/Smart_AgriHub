@@ -1,102 +1,140 @@
 import type { Express } from "express";
-import { createServer, type Server } from "http";
+import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
-import { z } from "zod";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { spawn } from "child_process";
 import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
 
-// Configure Multer for file uploads
+const localPythonPath =
+  process.platform === "win32" && process.env.LOCALAPPDATA
+    ? path.join(process.env.LOCALAPPDATA, "Programs", "Python", "Python313", "python.exe")
+    : null;
+
+const pythonCommands =
+  process.env.PYTHON_BIN
+    ? [process.env.PYTHON_BIN]
+    : process.platform === "win32"
+      ? [
+          ...(localPythonPath && fs.existsSync(localPythonPath) ? [localPythonPath] : []),
+          "python",
+          "py -3",
+          "python3",
+        ]
+      : ["python3", "python"];
+
 const uploadDir = path.join(process.cwd(), "client/public/uploads");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
 const storageConfig = multer.diskStorage({
-  destination: function (req, file, cb) {
+  destination: function (_req: any, _file: any, cb: (error: Error | null, destination: string) => void) {
     cb(null, uploadDir);
   },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+  filename: function (_req: any, file: { originalname: string }, cb: (error: Error | null, filename: string) => void) {
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
     cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
+  },
 });
 
 const upload = multer({ storage: storageConfig });
 
-// Helper to run Python scripts
-async function runPythonScript(scriptPath: string, inputData: any): Promise<any> {
-  return new Promise((resolve, reject) => {
-    const pythonProcess = spawn("python3", [scriptPath]);
-    
-    let result = "";
-    let error = "";
+type UploadedDetection = {
+  disease: string;
+  confidence: number;
+  severity: string;
+  treatment: {
+    organic: string;
+    chemical: string;
+    prevention: string;
+  };
+};
 
-    pythonProcess.stdout.on("data", (data) => {
-      result += data.toString();
-    });
+async function runPythonScript(scriptPath: string, inputData: unknown): Promise<any> {
+  let lastError: Error | undefined;
 
-    pythonProcess.stderr.on("data", (data) => {
-      error += data.toString();
-    });
+  for (const command of pythonCommands) {
+    try {
+      return await new Promise((resolve, reject) => {
+        const [binary, ...binaryArgs] = command.split(" ");
+        const pythonProcess = spawn(binary, [...binaryArgs, scriptPath]);
 
-    pythonProcess.on("close", (code) => {
-      if (code !== 0) {
-        return reject(new Error(`Python script exited with code ${code}: ${error}`));
-      }
-      try {
-        resolve(JSON.parse(result));
-      } catch (e) {
-        reject(new Error(`Failed to parse Python output: ${result}`));
-      }
-    });
+        let result = "";
+        let error = "";
+        let settled = false;
 
-    // Send input data to stdin
-    pythonProcess.stdin.write(JSON.stringify(inputData));
-    pythonProcess.stdin.end();
-  });
+        pythonProcess.stdout.on("data", (data) => {
+          result += data.toString();
+        });
+
+        pythonProcess.stderr.on("data", (data) => {
+          error += data.toString();
+        });
+
+        pythonProcess.on("error", (spawnError) => {
+          if (settled) return;
+          settled = true;
+          reject(spawnError);
+        });
+
+        pythonProcess.on("close", (code) => {
+          if (settled) return;
+          settled = true;
+
+          if (code !== 0) {
+            reject(new Error(`Python script exited with code ${code}: ${error}`));
+            return;
+          }
+
+          try {
+            resolve(JSON.parse(result));
+          } catch {
+            reject(new Error(`Failed to parse Python output: ${result}`));
+          }
+        });
+
+        pythonProcess.stdin.write(JSON.stringify(inputData));
+        pythonProcess.stdin.end();
+      });
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+    }
+  }
+
+  throw new Error(
+    `Unable to run Python script. Tried: ${pythonCommands.join(", ")}. Last error: ${lastError?.message ?? "unknown error"}`,
+  );
 }
 
-export async function registerRoutes(
-  httpServer: Server,
-  app: Express
-): Promise<Server> {
-  // Setup Auth
+export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   await setupAuth(app);
   registerAuthRoutes(app);
 
-  // Serve uploads statically (for when running in production/without vite proxying public correctly)
-  // In dev, Vite serves public/, but explicit route helps debug
-  app.use('/uploads', (req, res, next) => {
-    // Basic static serve fallback
+  app.use("/uploads", (req, res, next) => {
     const filePath = path.join(uploadDir, req.path);
     if (fs.existsSync(filePath)) {
       res.sendFile(filePath);
-    } else {
-      next();
+      return;
     }
+    next();
   });
 
-  // --- CROP PREDICTION ---
   app.post(api.crop.predict.path, async (req, res) => {
     try {
       const input = api.crop.predict.input.parse(req.body);
-      const userId = req.user?.claims?.sub;
-
-      // Run Python ML model
+      const userId = req.user?.claims?.sub ?? null;
       const scriptPath = path.join(process.cwd(), "server/ml/predict_crop.py");
       const mlResult = await runPythonScript(scriptPath, input);
-      
+
       if (mlResult.error) throw new Error(mlResult.error);
 
-      // Save to DB
       const saved = await storage.createCropPrediction({
         ...input,
-        userId: userId || null,
-        predictedCrop: mlResult.prediction
+        userId,
+        predictedCrop: mlResult.prediction,
       });
 
       res.json(saved);
@@ -107,17 +145,14 @@ export async function registerRoutes(
   });
 
   app.get(api.crop.history.path, async (req, res) => {
-    const userId = req.user?.claims?.sub;
-    const history = await storage.getCropPredictions(userId);
+    const history = await storage.getCropPredictions(req.user?.claims?.sub);
     res.json(history);
   });
 
-  // --- FERTILIZER RECOMMENDATION ---
   app.post(api.fertilizer.predict.path, async (req, res) => {
     try {
       const input = api.fertilizer.predict.input.parse(req.body);
-      const userId = req.user?.claims?.sub;
-
+      const userId = req.user?.claims?.sub ?? null;
       const scriptPath = path.join(process.cwd(), "server/ml/predict_fertilizer.py");
       const mlResult = await runPythonScript(scriptPath, input);
 
@@ -125,8 +160,8 @@ export async function registerRoutes(
 
       const saved = await storage.createFertilizerRecommendation({
         ...input,
-        userId: userId || null,
-        recommendedFertilizer: mlResult.recommendation
+        userId,
+        recommendedFertilizer: mlResult.recommendation,
       });
 
       res.json(saved);
@@ -137,42 +172,39 @@ export async function registerRoutes(
   });
 
   app.get(api.fertilizer.history.path, async (req, res) => {
-    const userId = req.user?.claims?.sub;
-    const history = await storage.getFertilizerRecommendations(userId);
+    const history = await storage.getFertilizerRecommendations(req.user?.claims?.sub);
     res.json(history);
   });
 
-  // --- DISEASE DETECTION ---
   app.post(api.disease.detect.path, upload.single("image"), async (req, res) => {
     try {
-      if (!req.file) return res.status(400).json({ message: "No image uploaded" });
-      
-      const userId = req.user?.claims?.sub;
-      const imageUrl = `/uploads/${req.file.filename}`;
-      const filePath = req.file.path;
+      if (!req.file) {
+        res.status(400).json({ message: "No image uploaded" });
+        return;
+      }
 
-      // Run Python script
-      const scriptPath = path.join(process.cwd(), "server/ml/detect_disease.py");
-      // Pass file path to script (script doesn't need stdin json in this mock, but we can pass args)
-      // Modifying runPythonScript to handle args or just stdin? 
-      // The current runPythonScript writes JSON to stdin. 
-      // Let's modify the python script to read stdin or just ignore it if it hardcodes.
-      // Or pass image path in JSON
-      const mlResult = await runPythonScript(scriptPath, { imagePath: filePath });
+      const userId = req.user?.claims?.sub ?? null;
+      const imageUrl = `/uploads/${req.file.filename}`;
+      const uploadedDetection = parseUploadedDetection(req.body);
+      const mlResult =
+        uploadedDetection ??
+        await runPythonScript(path.join(process.cwd(), "server/ml/detect_disease.py"), {
+          imagePath: req.file.path,
+        });
 
       if (mlResult.error) throw new Error(mlResult.error);
 
       const saved = await storage.createDiseaseDetection({
-        userId: userId || null,
-        imageUrl: imageUrl,
+        userId,
+        imageUrl,
         detectedDisease: mlResult.disease,
-        confidence: mlResult.confidence
+        confidence: mlResult.confidence,
       });
 
       res.json({
         ...saved,
         severity: mlResult.severity,
-        treatment: mlResult.treatment
+        treatment: mlResult.treatment,
       });
     } catch (error) {
       console.error("Disease detection error:", error);
@@ -181,33 +213,29 @@ export async function registerRoutes(
   });
 
   app.get(api.disease.history.path, async (req, res) => {
-    const userId = req.user?.claims?.sub;
-    const history = await storage.getDiseaseDetections(userId);
+    const history = await storage.getDiseaseDetections(req.user?.claims?.sub);
     res.json(history);
   });
 
-  // --- SMART IRRIGATION ---
   app.post(api.irrigation.predict.path, async (req, res) => {
     try {
       const input = api.irrigation.predict.input.parse(req.body);
-      const userId = req.user?.claims?.sub;
-
+      const userId = req.user?.claims?.sub ?? null;
       const scriptPath = path.join(process.cwd(), "server/ml/predict_irrigation.py");
       const mlResult = await runPythonScript(scriptPath, input);
 
       if (mlResult.error) throw new Error(mlResult.error);
 
-      // Save to logs — use actual values from weather API result, not form input
       await storage.createIrrigationLog({
         soilMoisture: input.soilMoisture,
         growthStage: input.growthStage,
-        userId: userId || null,
+        userId,
         evapotranspiration: mlResult.live_weather?.evapotranspiration ?? 0,
         temperature: mlResult.live_weather?.temp ?? input.temperature ?? 0,
         humidity: mlResult.live_weather?.humidity ?? input.humidity ?? 0,
         recommendedLiters: mlResult.recommended_liters,
         bestTime: mlResult.best_time,
-        waterSavings: mlResult.water_savings_percentage
+        waterSavings: mlResult.water_savings_percentage,
       });
 
       res.json(mlResult);
@@ -218,10 +246,45 @@ export async function registerRoutes(
   });
 
   app.get(api.irrigation.history.path, async (req, res) => {
-    const userId = req.user?.claims?.sub;
-    const history = await storage.getIrrigationLogs(userId);
+    const history = await storage.getIrrigationLogs(req.user?.claims?.sub);
     res.json(history);
   });
 
   return httpServer;
+}
+
+function parseUploadedDetection(body: Record<string, unknown> | undefined): UploadedDetection | null {
+  if (!body) return null;
+
+  const disease = typeof body.disease === "string" ? body.disease : null;
+  const confidenceValue =
+    typeof body.confidence === "string" || typeof body.confidence === "number"
+      ? Number(body.confidence)
+      : NaN;
+  const severity = typeof body.severity === "string" ? body.severity : null;
+  const treatmentRaw = typeof body.treatment === "string" ? body.treatment : null;
+
+  if (!disease || !severity || Number.isNaN(confidenceValue) || !treatmentRaw) {
+    return null;
+  }
+
+  try {
+    const treatment = JSON.parse(treatmentRaw);
+    if (
+      typeof treatment.organic !== "string" ||
+      typeof treatment.chemical !== "string" ||
+      typeof treatment.prevention !== "string"
+    ) {
+      return null;
+    }
+
+    return {
+      disease,
+      confidence: confidenceValue,
+      severity,
+      treatment,
+    };
+  } catch {
+    return null;
+  }
 }

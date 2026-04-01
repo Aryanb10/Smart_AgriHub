@@ -7,6 +7,22 @@ import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { authStorage } from "./storage";
+import { hasDatabase } from "../../db";
+
+const hasReplitAuthConfig = Boolean(
+  hasDatabase && process.env.SESSION_SECRET && process.env.REPL_ID,
+);
+
+const localDevUser = {
+  claims: {
+    sub: "local-dev-user",
+    email: "dev@local.test",
+    first_name: "Local",
+    last_name: "Developer",
+    profile_image_url: null,
+  },
+  expires_at: Number.MAX_SAFE_INTEGER,
+};
 
 const getOidcConfig = memoize(
   async () => {
@@ -61,6 +77,37 @@ async function upsertUser(claims: any) {
 }
 
 export async function setupAuth(app: Express) {
+  if (!hasReplitAuthConfig) {
+    await authStorage.upsertUser({
+      id: localDevUser.claims.sub,
+      email: localDevUser.claims.email,
+      firstName: localDevUser.claims.first_name,
+      lastName: localDevUser.claims.last_name,
+      profileImageUrl: localDevUser.claims.profile_image_url,
+    });
+
+    app.use((req, _res, next) => {
+      (req as any).user = localDevUser;
+      (req as any).isAuthenticated = () => true;
+      (req as any).logout = (callback?: () => void) => callback?.();
+      next();
+    });
+
+    app.get("/api/login", (_req, res) => {
+      res.redirect("/");
+    });
+
+    app.get("/api/callback", (_req, res) => {
+      res.redirect("/");
+    });
+
+    app.get("/api/logout", (req, res) => {
+      (req as any).logout?.(() => res.redirect("/"));
+    });
+
+    return;
+  }
+
   app.set("trust proxy", 1);
   app.use(getSession());
   app.use(passport.initialize());
@@ -131,6 +178,10 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
+  if (!hasReplitAuthConfig) {
+    return next();
+  }
+
   const user = req.user as any;
 
   if (!req.isAuthenticated() || !user.expires_at) {

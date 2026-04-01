@@ -4,7 +4,20 @@ import {
   insertFertilizerRecommendationSchema, 
   cropPredictions,
   fertilizerRecommendations,
-  diseaseDetections
+  diseaseDetections,
+  type PredictCropRequest,
+  type PredictFertilizerRequest,
+  type CropPredictionResponse,
+  type FertilizerRecommendationResponse,
+  type DiseaseDetectionResponse
+} from './schema';
+
+export type {
+  PredictCropRequest,
+  PredictFertilizerRequest,
+  CropPredictionResponse,
+  FertilizerRecommendationResponse,
+  DiseaseDetectionResponse,
 } from './schema';
 
 // ============================================

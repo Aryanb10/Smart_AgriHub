@@ -1,14 +1,21 @@
 import { useState, useRef } from "react";
 import { useAgriAI } from "@/hooks/use-agri-ai";
-import { Loader2, Bug, Upload, Image as ImageIcon, AlertTriangle, CheckCircle } from "lucide-react";
+import { Loader2, Bug, Upload, AlertTriangle, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { analyzeLeafImage, type DiseaseResult } from "@/lib/disease-detection";
+
+type DetectionResponse = DiseaseResult & {
+  id?: number;
+  imageUrl?: string;
+  detectedDisease?: string;
+};
 
 export default function Disease() {
   const { detectDisease } = useAgriAI();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<DetectionResponse | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,49 +43,48 @@ export default function Disease() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!file) return;
+
+    const analysis = await analyzeLeafImage(file);
     const formData = new FormData();
     formData.append("image", file);
+    formData.append("disease", analysis.disease);
+    formData.append("confidence", String(analysis.confidence));
+    formData.append("severity", analysis.severity);
+    formData.append("treatment", JSON.stringify(analysis.treatment));
+
     detectDisease.mutate(formData, {
-      onSuccess: (res) => setResult(res)
+      onSuccess: (res) => setResult(res),
     });
   };
+
+  const displayDisease = result?.detectedDisease ?? result?.disease ?? "";
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="text-center mb-12">
         <h1 className="text-3xl font-display font-bold text-foreground mb-4">Disease Detection</h1>
         <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-          Upload a clear photo of an affected plant leaf. Our AI model will analyze visual patterns to identify diseases.
+          Upload a clear photo of an affected plant leaf. The detector identifies Healthy leaves, Powdery Mildew, and Rust from visible leaf patterns.
         </p>
       </div>
 
       <div className="bg-card border border-border rounded-3xl p-8 shadow-sm">
-        <div 
+        <div
           className={cn(
             "border-3 border-dashed rounded-2xl p-10 text-center transition-all cursor-pointer relative overflow-hidden group",
-            preview ? "border-primary/50 bg-primary/5" : "border-border hover:border-primary/50 hover:bg-muted/50"
+            preview ? "border-primary/50 bg-primary/5" : "border-border hover:border-primary/50 hover:bg-muted/50",
           )}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
         >
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            onChange={handleFileChange} 
-            accept="image/*" 
-            className="hidden" 
-          />
-          
+          <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+
           {preview ? (
             <div className="relative z-10">
-              <img 
-                src={preview} 
-                alt="Upload preview" 
-                className="max-h-80 mx-auto rounded-lg shadow-lg" 
-              />
+              <img src={preview} alt="Upload preview" className="max-h-80 mx-auto rounded-lg shadow-lg" />
               <div className="mt-4 text-sm text-muted-foreground">Click or drop to replace</div>
             </div>
           ) : (
@@ -87,7 +93,7 @@ export default function Disease() {
                 <Upload size={32} />
               </div>
               <h3 className="text-xl font-semibold mb-2">Click or drag image here</h3>
-              <p className="text-muted-foreground text-sm">Supports JPG, PNG (Max 5MB)</p>
+              <p className="text-muted-foreground text-sm">Supports JPG and PNG leaf photos</p>
             </div>
           )}
         </div>
@@ -113,27 +119,26 @@ export default function Disease() {
 
       <AnimatePresence>
         {result && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-8"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-8">
             <div className="bg-white dark:bg-card border border-border rounded-2xl overflow-hidden shadow-lg">
-              <div className={cn(
-                "p-4 text-white font-medium text-center",
-                result.detectedDisease.toLowerCase().includes("healthy") ? "bg-green-500" : "bg-red-500"
-              )}>
+              <div
+                className={cn(
+                  "p-4 text-white font-medium text-center",
+                  displayDisease.toLowerCase().includes("healthy") ? "bg-green-500" : "bg-red-500",
+                )}
+              >
                 Detection Result
               </div>
               <div className="p-8 text-center">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
-                  {result.detectedDisease.toLowerCase().includes("healthy") 
-                    ? <CheckCircle className="w-8 h-8 text-green-600" />
-                    : <AlertTriangle className="w-8 h-8 text-red-600" />
-                  }
+                  {displayDisease.toLowerCase().includes("healthy") ? (
+                    <CheckCircle className="w-8 h-8 text-green-600" />
+                  ) : (
+                    <AlertTriangle className="w-8 h-8 text-red-600" />
+                  )}
                 </div>
-                <h2 className="text-4xl font-display font-bold mb-2 tracking-tight">{result.detectedDisease}</h2>
-                
+                <h2 className="text-4xl font-display font-bold mb-2 tracking-tight">{displayDisease}</h2>
+
                 <div className="flex flex-wrap items-center justify-center gap-6 my-8 py-6 border-y border-border/50">
                   <div className="flex flex-col items-center">
                     <div className="text-[10px] text-muted-foreground mb-1 uppercase tracking-widest font-bold">Confidence</div>
@@ -142,34 +147,38 @@ export default function Disease() {
                   <div className="w-px h-10 bg-border hidden md:block"></div>
                   <div className="flex flex-col items-center">
                     <div className="text-[10px] text-muted-foreground mb-1 uppercase tracking-widest font-bold">Severity</div>
-                    <div className={cn(
-                      "text-xl font-bold px-4 py-1 rounded-full",
-                      result.severity === "Severe" ? "bg-destructive/10 text-destructive" :
-                      result.severity === "Moderate" ? "bg-amber-500/10 text-amber-600" :
-                      "bg-primary/10 text-primary"
-                    )}>
-                      {result.severity || "Healthy"}
+                    <div
+                      className={cn(
+                        "text-xl font-bold px-4 py-1 rounded-full",
+                        result.severity === "Moderate"
+                          ? "bg-destructive/10 text-destructive"
+                          : result.severity === "Mild"
+                            ? "bg-amber-500/10 text-amber-600"
+                            : "bg-primary/10 text-primary",
+                      )}
+                    >
+                      {result.severity}
                     </div>
                   </div>
                 </div>
 
-                {result.treatment && !result.detectedDisease.toLowerCase().includes("healthy") && (
+                {!displayDisease.toLowerCase().includes("healthy") && result.treatment && (
                   <div className="mt-8 space-y-6 text-left max-w-2xl mx-auto">
                     <h4 className="font-bold text-xl flex items-center gap-2 text-foreground">
                       <CheckCircle className="w-6 h-6 text-primary" /> Recommended Recovery Plan
                     </h4>
-                    
+
                     <div className="grid grid-cols-1 gap-4">
                       <div className="group bg-primary/[0.03] hover:bg-primary/[0.05] p-5 rounded-2xl border border-primary/10 transition-colors">
                         <div className="text-[10px] font-bold text-primary uppercase mb-2 tracking-widest">Organic Approach</div>
                         <p className="text-sm leading-relaxed text-foreground/90">{result.treatment.organic}</p>
                       </div>
-                      
+
                       <div className="group bg-secondary/30 hover:bg-secondary/50 p-5 rounded-2xl border border-border transition-colors">
                         <div className="text-[10px] font-bold text-muted-foreground uppercase mb-2 tracking-widest">Chemical Control</div>
                         <p className="text-sm leading-relaxed text-foreground/90">{result.treatment.chemical}</p>
                       </div>
-                      
+
                       <div className="group bg-amber-500/[0.03] hover:bg-amber-500/[0.05] p-5 rounded-2xl border border-amber-500/10 transition-colors">
                         <div className="text-[10px] font-bold text-amber-600 uppercase mb-2 tracking-widest">Prevention & Hygiene</div>
                         <p className="text-sm leading-relaxed text-foreground/90">{result.treatment.prevention}</p>
@@ -177,11 +186,11 @@ export default function Disease() {
                     </div>
                   </div>
                 )}
-                
-                {result.detectedDisease.toLowerCase().includes("healthy") && (
+
+                {displayDisease.toLowerCase().includes("healthy") && (
                   <div className="bg-green-500/5 border border-green-500/10 rounded-2xl p-6 text-left max-w-2xl mx-auto mt-8">
                     <p className="text-green-700 dark:text-green-400 text-sm leading-relaxed">
-                      Your plant appears to be in great health! Continue maintaining regular watering schedules and ensure adequate sunlight to keep it thriving.
+                      Your leaf appears healthy. Continue balanced watering, sunlight, and regular monitoring.
                     </p>
                   </div>
                 )}

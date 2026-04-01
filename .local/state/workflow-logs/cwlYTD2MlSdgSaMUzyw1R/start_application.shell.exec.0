@@ -1,0 +1,89 @@
+[1G[0K⠙[1G[0K⠹[1G[0K
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+[1G[0K⠹[1G[0K7:11:20 PM [express] serving on port 5000
+8:03:10 PM [express] GET /api/auth/user 401 in 2ms :: {"message":"Unauthorized"}
+8:03:41 PM [express] GET /api/auth/user 401 in 1ms :: {"message":"Unauthorized"}
+8:03:44 PM [express] GET /api/login 302 in 402ms
+8:03:50 PM [express] GET /api/callback 302 in 238ms
+8:03:54 PM [express] GET /api/auth/user 200 in 8ms :: {"id":"49380615","email":"007krishstark@gmail.com","firstName":"Krish","lastName":"Gupta","profileImageUrl":null,"createdAt":"2026-02-09T08:41:37.661Z","updatedAt":"2026-03-24T20:03:50.597Z"}
+8:03:54 PM [express] GET /api/history/crop 304 in 9ms :: [{"id":6,"userId":"49380615","nitrogen":70,"phosphorus":50,"potassium":25,"temperature":40,"humidity":50,"ph":4,"rainfall":150,"predictedCrop":"maize","createdAt":"2026-02-09T11:15:04.301Z"},{"id":5,"userId":"49380615","nitrogen":70,"phosphorus":50,"potassium":25,"temperature":16,"humidity":20,"ph":7,"rainfall":150,"predictedCrop":"rice","createdAt":"2026-02-09T11:14:38.375Z"},{"id":4,"userId":"49380615","nitrogen":90,"phosphorus":42,"potassium":43,"temperature":20.8,"humidity":82,"ph":6.5,"rainfall":202.9,"predictedCrop":"rice","createdAt":"2026-02-09T11:13:13.116Z"},{"id":3,"userId":"49380615","nitrogen":40,"phosphorus":30,"potassium":50,"temperature":30,"humidity":60,"ph":6.5,"rainfall":100,"predictedCrop":"maize","createdAt":"2026-02-09T08:45:04.193Z"},{"id":2,"userId":"49380615","nitrogen":90,"phosphorus":42,"potassium":43,"temperature":20.8,"humidity":82,"ph":6.5,"rainfall":202.9,"predictedCrop":"rice","createdAt":"2026-02-09T08:44:34.306Z"},{"id":1,"userId":"49380615","nitrogen":90,"phosphorus":42,"potassium":43,"temperature":20.8,"humidity":82,"ph":6.5,"rainfall":202.9,"predictedCrop":"rice","createdAt":"2026-02-09T08:43:18.745Z"}]
+8:03:54 PM [express] GET /api/history/irrigation 200 in 10ms :: [{"id":14,"userId":"49380615","soilMoisture":35,"growthStage":"Vegetative","evapotranspiration":5.2,"temperature":28.5,"humidity":65,"recommendedLiters":0,"bestTime":"7:00 PM","waterSavings":100,"createdAt":"2026-03-12T12:16:13.331Z"},{"id":13,"userId":"49380615","soilMoisture":35,"growthStage":"Initial","evapotranspiration":5.2,"temperature":0,"humidity":0,"recommendedLiters":3074.88,"bestTime":"6:00 AM","waterSavings":20,"createdAt":"2026-03-03T09:19:54.724Z"},{"id":12,"userId":"49380615","soilMoisture":35,"growthStage":"Initial","evapotranspiration":5.2,"temperature":0,"humidity":0,"recommendedLiters":3480.96,"bestTime":"6:00 AM","waterSavings":20,"createdAt":"2026-03-03T09:19:39.673Z"},{"id":11,"userId":"49380615","soilMoisture":35,"growthStage":"Initial","evapotranspiration":5.2,"temperature":0,"humidity":0,"recommendedLiters":3480.96,"bestTime":"6:00 AM","waterSavings":20,"createdAt":"2026-03-03T09:19:35.739Z"},{"id":10,"userId":"49380615","soilMoisture":35,"growthStage":"Initial","evapotranspiration":5.2,"temperature":0,"humidity":0,"recommendedLiters":2863.44,"bestTime":"6:00 AM","waterSavings":20,"createdAt":"2026-03-03T09:19:12.069Z"},{"id":9,"userId":"49380615","soilMoisture":35,"growthStage":"Vegetative","evapotranspiration":5.2,"temperature":0,"humidity":0,"recommendedLiters":3069.84,"bestTime":"6:00 AM","waterSavings":20,"createdAt":"2026-02-28T06:08:58.732Z"},{"id":8,"userId":"49380615","soilMoisture":35,"growthStage":"Vegetative","evapotranspiration":5.2,"temperature":0,"humidity":0,"recommendedLiters":2081.76,"bestTime":"7:00 PM","waterSavings":20,"createdAt":"2026-02-28T05:25:12.159Z"},{"id":7,"userId":"49380615","soilMoisture":35,"growthStage":"Vegetative","evapotranspiration":5.2,"temperature":0,"humidity":0,"recommendedLiters":3048.72,"bestTime":"6:00 AM","waterSavings":20,"createdAt":"2026-02-28T05:09:50.533Z"},{"id":6,"userId":"49380615","soilMoisture":35,"growthStage":"Vegetative","evapotranspiration":5.2,"temperature":0,"humidity":0,"recommendedLiters":3047.76,"bestTime":"6:00 AM","waterSavings":20,"createdAt":"2026-02-28T05:09:38.930Z"},{"id":5,"userId":"49380615","soilMoisture":35,"growthStage":"Vegetative","evapotranspiration":5.2,"temperature":0,"humidity":0,"recommendedLiters":2204.64,"bestTime":"7:00 PM","waterSavings":20,"createdAt":"2026-02-28T05:09:20.079Z"},{"id":4,"userId":"49380615","soilMoisture":35,"growthStage":"Vegetative","evapotranspiration":5.2,"temperature":28.5,"humidity":65,"recommendedLiters":1731.12,"bestTime":"7:00 PM","waterSavings":42.66,"createdAt":"2026-02-26T03:39:41.016Z"},{"id":3,"userId":"49380615","soilMoisture":35,"growthStage":"Vegetative","evapotranspiration":5.2,"temperature":28.5,"humidity":65,"recommendedLiters":3137.04,"bestTime":"7:00 PM","waterSavings":20,"createdAt":"2026-02-26T03:39:09.535Z"},{"id":2,"userId":"49380615","soilMoisture":35,"growthStage":"Vegetative","evapotranspiration":5.2,"temperature":28.5,"humidity":65,"recommendedLiters":2945.52,"bestTime":"6:00 AM","waterSavings":20,"createdAt":"2026-02-26T03:38:33.868Z"},{"id":1,"userId":"49380615","soilMoisture":35,"growthStage":"Vegetative","evapotranspiration":5.2,"temperature":28.5,"humidity":65,"recommendedLiters":2994,"bestTime":"6:00 AM","waterSavings":20,"createdAt":"2026-02-24T13:22:43.510Z"}]
+8:03:54 PM [express] GET /api/history/disease 304 in 20ms :: [{"id":3,"userId":"49380615","imageUrl":"/uploads/1770635784262-892147998.png","detectedDisease":"Rust","confidence":0.91,"createdAt":"2026-02-09T11:17:07.081Z"},{"id":2,"userId":"49380615","imageUrl":"/uploads/1770635737137-576364894.png","detectedDisease":"Rust","confidence":0.73,"createdAt":"2026-02-09T11:16:23.023Z"},{"id":1,"userId":"49380615","imageUrl":"/uploads/1770626819511-501980280.png","detectedDisease":"Leaf Spot","confidence":0.93,"createdAt":"2026-02-09T08:47:08.274Z"}]
+8:03:54 PM [express] GET /api/history/fertilizer 304 in 20ms :: [{"id":2,"userId":"49380615","nitrogen":50,"phosphorus":50,"potassium":50,"soilType":"Red","cropType":"Rice","recommendedFertilizer":"Balanced 10-10-10 (tailored for Rice on Red soil)","createdAt":"2026-02-09T11:15:20.066Z"},{"id":1,"userId":"49380615","nitrogen":50,"phosphorus":50,"potassium":50,"soilType":"Loam","cropType":"Rice","recommendedFertilizer":"Balanced 10-10-10 (tailored for Rice on Loam soil)","createdAt":"2026-02-09T08:46:05.147Z"}]
+Irrigation prediction error: error: null value in column "evapotranspiration" of relation "irrigation_logs" violates not-null constraint
+    at [90m/home/runner/workspace/[39mnode_modules/[4mpg-pool[24m/index.js:45:11
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+    at async <anonymous> [90m(/home/runner/workspace/[39mnode_modules/[4msrc[24m/node-postgres/session.ts:104:19[90m)[39m
+    at async DatabaseStorage.createIrrigationLog [90m(/home/runner/workspace/[39mserver/storage.ts:84:22[90m)[39m
+    at async <anonymous> [90m(/home/runner/workspace/[39mserver/routes.ts:201:7[90m)[39m {
+  length: [33m328[39m,
+  severity: [32m'ERROR'[39m,
+  code: [32m'23502'[39m,
+  detail: [32m'Failing row contains (15, 49380615, 20, Vegetative, null, null, null, 307.8, 7:00 PM, 20, 2026-03-24 20:04:29.534689).'[39m,
+  hint: [90mundefined[39m,
+  position: [90mundefined[39m,
+  internalPosition: [90mundefined[39m,
+  internalQuery: [90mundefined[39m,
+  where: [90mundefined[39m,
+  schema: [32m'public'[39m,
+  table: [32m'irrigation_logs'[39m,
+  column: [32m'evapotranspiration'[39m,
+  dataType: [90mundefined[39m,
+  constraint: [90mundefined[39m,
+  file: [32m'execMain.c'[39m,
+  line: [32m'2011'[39m,
+  routine: [32m'ExecConstraints'[39m
+}
+8:04:29 PM [express] POST /api/predict/irrigation 500 in 1079ms :: {"message":"Failed to predict irrigation"}
+Irrigation prediction error: error: null value in column "evapotranspiration" of relation "irrigation_logs" violates not-null constraint
+    at [90m/home/runner/workspace/[39mnode_modules/[4mpg-pool[24m/index.js:45:11
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+    at async <anonymous> [90m(/home/runner/workspace/[39mnode_modules/[4msrc[24m/node-postgres/session.ts:104:19[90m)[39m
+    at async DatabaseStorage.createIrrigationLog [90m(/home/runner/workspace/[39mserver/storage.ts:84:22[90m)[39m
+    at async <anonymous> [90m(/home/runner/workspace/[39mserver/routes.ts:201:7[90m)[39m {
+  length: [33m328[39m,
+  severity: [32m'ERROR'[39m,
+  code: [32m'23502'[39m,
+  detail: [32m'Failing row contains (16, 49380615, 20, Vegetative, null, null, null, 307.8, 7:00 PM, 20, 2026-03-24 20:04:33.388892).'[39m,
+  hint: [90mundefined[39m,
+  position: [90mundefined[39m,
+  internalPosition: [90mundefined[39m,
+  internalQuery: [90mundefined[39m,
+  where: [90mundefined[39m,
+  schema: [32m'public'[39m,
+  table: [32m'irrigation_logs'[39m,
+  column: [32m'evapotranspiration'[39m,
+  dataType: [90mundefined[39m,
+  constraint: [90mundefined[39m,
+  file: [32m'execMain.c'[39m,
+  line: [32m'2011'[39m,
+  routine: [32m'ExecConstraints'[39m
+}
+8:04:33 PM [express] POST /api/predict/irrigation 500 in 210ms :: {"message":"Failed to predict irrigation"}
+Irrigation prediction error: error: null value in column "evapotranspiration" of relation "irrigation_logs" violates not-null constraint
+    at [90m/home/runner/workspace/[39mnode_modules/[4mpg-pool[24m/index.js:45:11
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+    at async <anonymous> [90m(/home/runner/workspace/[39mnode_modules/[4msrc[24m/node-postgres/session.ts:104:19[90m)[39m
+    at async DatabaseStorage.createIrrigationLog [90m(/home/runner/workspace/[39mserver/storage.ts:84:22[90m)[39m
+    at async <anonymous> [90m(/home/runner/workspace/[39mserver/routes.ts:201:7[90m)[39m {
+  length: [33m328[39m,
+  severity: [32m'ERROR'[39m,
+  code: [32m'23502'[39m,
+  detail: [32m'Failing row contains (17, 49380615, 20, Vegetative, null, null, null, 307.8, 7:00 PM, 20, 2026-03-24 20:04:40.160156).'[39m,
+  hint: [90mundefined[39m,
+  position: [90mundefined[39m,
+  internalPosition: [90mundefined[39m,
+  internalQuery: [90mundefined[39m,
+  where: [90mundefined[39m,
+  schema: [32m'public'[39m,
+  table: [32m'irrigation_logs'[39m,
+  column: [32m'evapotranspiration'[39m,
+  dataType: [90mundefined[39m,
+  constraint: [90mundefined[39m,
+  file: [32m'execMain.c'[39m,
+  line: [32m'2011'[39m,
+  routine: [32m'ExecConstraints'[39m
+}
+8:04:40 PM [express] POST /api/predict/irrigation 500 in 220ms :: {"message":"Failed to predict irrigation"}
