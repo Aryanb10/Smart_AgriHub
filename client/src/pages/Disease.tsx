@@ -46,13 +46,8 @@ export default function Disease() {
   const handleSubmit = async () => {
     if (!file) return;
 
-    const analysis = await analyzeLeafImage(file);
     const formData = new FormData();
     formData.append("image", file);
-    formData.append("disease", analysis.disease);
-    formData.append("confidence", String(analysis.confidence));
-    formData.append("severity", analysis.severity);
-    formData.append("treatment", JSON.stringify(analysis.treatment));
 
     detectDisease.mutate(formData, {
       onSuccess: (res) => setResult(res),

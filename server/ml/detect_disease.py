@@ -1,53 +1,77 @@
-import hashlib
 import json
 import os
 import sys
+import numpy as np
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing import image
 
 
 DISEASE_TREATMENT = {
-    "Tomato Early Blight": {
-        "organic": "Remove affected lower leaves and apply neem or copper-based spray.",
-        "chemical": "Use chlorothalonil or mancozeb according to label guidance.",
-        "prevention": "Avoid wet foliage and improve airflow between plants.",
-    },
-    "Tomato Leaf Mold": {
-        "organic": "Prune dense foliage and reduce humidity around the plant canopy.",
-        "chemical": "Use a recommended fungicide for leaf mold if spread continues.",
-        "prevention": "Water near the roots and ventilate protected growing areas.",
-    },
-    "Bacterial Leaf Spot": {
-        "organic": "Remove infected leaves and avoid handling plants when wet.",
-        "chemical": "Use copper-based bactericides where locally approved.",
-        "prevention": "Start with disease-free seed and sanitize tools regularly.",
-    },
-    "Yellowing Stress Pattern": {
-        "organic": "Check watering consistency and add compost or balanced organic feed.",
-        "chemical": "Use a balanced foliar nutrient spray only if deficiency is confirmed.",
-        "prevention": "Maintain even irrigation and monitor nutrient balance.",
-    },
     "Healthy": {
         "organic": "Continue regular monitoring and balanced watering.",
         "chemical": "No chemical treatment needed.",
         "prevention": "Keep good airflow and sanitation to prevent outbreaks.",
     },
+    "Leaf Blight": {
+        "organic": "Remove infected leaves and apply neem oil or copper-based spray.",
+        "chemical": "Use chlorothalonil or mancozeb as per label instructions.",
+        "prevention": "Rotate crops and avoid overhead watering to keep foliage dry.",
+    },
+    "Rust": {
+        "organic": "Prune affected areas and apply sulfur-based organic fungicide.",
+        "chemical": "Apply fungicides containing tebuconazole or myclobutanil.",
+        "prevention": "Space plants well for air circulation and remove fallen debris.",
+    },
+    "Powdery Mildew": {
+        "organic": "Spray with a mixture of baking soda, water, and non-detergent soap.",
+        "chemical": "Use fungicides with sulfur or potassium bicarbonate.",
+        "prevention": "Ensure adequate sunlight and reduce humidity around plants.",
+    },
+    "Leaf Spot": {
+        "organic": "Remove diseased leaves and use a compost tea or baking soda spray.",
+        "chemical": "Apply fungicides with chlorothalonil or copper oxychloride.",
+        "prevention": "Avoid handling plants when wet and sanitize garden tools.",
+    },
 }
 
-CLASSES = [
-    ("Healthy", 0.84, "Healthy"),
-    ("Tomato Early Blight", 0.79, "Moderate"),
-    ("Yellowing Stress Pattern", 0.74, "Mild"),
-    ("Bacterial Leaf Spot", 0.77, "Severe"),
-    ("Tomato Leaf Mold", 0.71, "Moderate"),
-]
+CLASSES = ["Healthy", "Leaf Blight", "Rust", "Powdery Mildew", "Leaf Spot"]
+
+MODEL_PATH = "server/ml/disease_model.h5"
+_model = None
+
+
+def get_model():
+    global _model
+    if _model is None:
+        if not os.path.exists(MODEL_PATH):
+            raise FileNotFoundError(f"Model file not found at {MODEL_PATH}")
+        _model = load_model(MODEL_PATH)
+    return _model
 
 
 def analyze_leaf(image_path):
-    with open(image_path, "rb") as file:
-        data = file.read()
-
-    digest = hashlib.sha256(data).hexdigest()
-    index = int(digest[:2], 16) % len(CLASSES)
-    disease, confidence, severity = CLASSES[index]
+    model = get_model()
+    
+    # Preprocess image
+    img = image.load_img(image_path, target_size=(224, 224))
+    img_array = image.img_to_array(img)
+    img_array = np.expand_dims(img_array, axis=0)
+    img_array = img_array / 255.0  # Normalize
+    
+    # Predict
+    predictions = model.predict(img_array, verbose=0)
+    index = np.argmax(predictions[0])
+    confidence = float(predictions[0][index])
+    disease = CLASSES[index]
+    
+    # Severity assessment (simulated based on confidence for now, as per second asset)
+    if confidence > 0.8:
+        severity = "Mild" if disease == "Healthy" else "Severe"
+    elif confidence > 0.6:
+        severity = "Moderate"
+    else:
+        severity = "Mild"
+        
     return disease, confidence, severity
 
 
@@ -61,11 +85,11 @@ def detect_disease():
             return
 
         disease, confidence, severity = analyze_leaf(image_path)
-        treatment = DISEASE_TREATMENT[disease]
+        treatment = DISEASE_TREATMENT.get(disease, DISEASE_TREATMENT["Healthy"])
 
         print(json.dumps({
             "disease": disease,
-            "confidence": confidence,
+            "confidence": round(confidence, 2),
             "severity": severity,
             "treatment": treatment,
         }))

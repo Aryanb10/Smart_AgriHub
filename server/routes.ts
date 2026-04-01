@@ -185,12 +185,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       const userId = req.user?.claims?.sub ?? null;
       const imageUrl = `/uploads/${req.file.filename}`;
-      const uploadedDetection = parseUploadedDetection(req.body);
-      const mlResult =
-        uploadedDetection ??
-        await runPythonScript(path.join(process.cwd(), "server/ml/detect_disease.py"), {
-          imagePath: req.file.path,
-        });
+      const mlResult = await runPythonScript(path.join(process.cwd(), "server/ml/detect_disease.py"), {
+        imagePath: req.file.path,
+      });
 
       if (mlResult.error) throw new Error(mlResult.error);
 
@@ -251,40 +248,4 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   return httpServer;
-}
-
-function parseUploadedDetection(body: Record<string, unknown> | undefined): UploadedDetection | null {
-  if (!body) return null;
-
-  const disease = typeof body.disease === "string" ? body.disease : null;
-  const confidenceValue =
-    typeof body.confidence === "string" || typeof body.confidence === "number"
-      ? Number(body.confidence)
-      : NaN;
-  const severity = typeof body.severity === "string" ? body.severity : null;
-  const treatmentRaw = typeof body.treatment === "string" ? body.treatment : null;
-
-  if (!disease || !severity || Number.isNaN(confidenceValue) || !treatmentRaw) {
-    return null;
-  }
-
-  try {
-    const treatment = JSON.parse(treatmentRaw);
-    if (
-      typeof treatment.organic !== "string" ||
-      typeof treatment.chemical !== "string" ||
-      typeof treatment.prevention !== "string"
-    ) {
-      return null;
-    }
-
-    return {
-      disease,
-      confidence: confidenceValue,
-      severity,
-      treatment,
-    };
-  } catch {
-    return null;
-  }
 }
