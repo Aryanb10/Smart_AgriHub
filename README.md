@@ -24,7 +24,7 @@ Full-stack Agriculture AI Application with Crop Prediction, Fertilizer Recommend
    ```bash
    npm run dev
    ```
-3. Open http://localhost:5000 for running this project.
+3. Open http://localhost:5000 
 
 ## ML Models
 The Python scripts in `server/ml/` train simple models on-the-fly for demonstration. For production, replace the mock training data with real datasets and save the models using `joblib` or `pickle`.
