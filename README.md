@@ -1,4 +1,4 @@
-# AGRIAI-IMPROVED
+# SMART-AGRI-HUB
 
 Full-stack Agriculture AI Application with Crop Prediction, Fertilizer Recommendation, and Plant Disease Detection.
 
