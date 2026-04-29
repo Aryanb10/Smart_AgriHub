@@ -1,4 +1,4 @@
-# AGRIAI-IMPROVED
+# SMART-AGRI-HUB
 
 Full-stack Agriculture AI Application with Crop Prediction, Fertilizer Recommendation, and Plant Disease Detection.
 
@@ -32,4 +32,3 @@ The Python scripts in `server/ml/` train simple models on-the-fly for demonstrat
 ## Deployment
 - **Frontend**: Can be deployed to Vercel (see `vercel.json`).
 - **Backend**: Can be deployed to Render or Heroku.
-- **Replit**: Use the "Run" button or "Deploy" tab to publish instantly.
