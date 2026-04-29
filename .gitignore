@@ -2,5 +2,9 @@ node_modules
 dist
 .DS_Store
 server/public
+client/public/uploads
+*.log
+*.err
 vite.config.ts.*
 *.tar.gz
+run-dev.cmd
